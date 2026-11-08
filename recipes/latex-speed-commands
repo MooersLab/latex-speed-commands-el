@@ -1,0 +1,2 @@
+(latex-speed-commands :fetcher github
+                      :repo "MooersLab/latex-speed-commands-el")

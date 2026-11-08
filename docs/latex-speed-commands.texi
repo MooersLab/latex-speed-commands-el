@@ -1,0 +1,790 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename latex-speed-commands.info
+@settitle @LaTeX{} Speed Commands
+@documentencoding UTF-8
+@documentlanguage en
+@syncodeindex fn cp
+@syncodeindex vr cp
+@c %**end of header
+
+@copying
+This manual is for @LaTeX{} Speed Commands version 0.1.0.
+
+Copyright (C) 2026 Blaine Mooers.
+
+@quotation
+Permission is granted to copy, distribute and/or modify this
+document under the terms of the GNU Free Documentation License,
+Version 1.3 or any later version published by the Free Software
+Foundation, with no Invariant Sections, no Front-Cover Texts, and no
+Back-Cover Texts.
+
+@end quotation
+@end copying
+
+@dircategory Emacs misc features
+@direntry
+* LaTeX Speed Commands: (latex-speed-commands). Org-style single-key commands for LaTeX buffers.
+@end direntry
+
+@finalout
+@titlepage
+@title LaTeX Speed Commands
+@subtitle Org-style single-key commands for @LaTeX{} buffers
+@author Blaine Mooers (@email{blaine-mooers@@ou.edu})
+@page
+@vskip 0pt plus 1filll
+@insertcopying
+@end titlepage
+
+@ifnottex
+@node Top
+@top @LaTeX{} Speed Commands
+@end ifnottex
+
+@menu
+* Overview::
+* Installation::
+* Getting started::
+* Speed positions::
+* Heading speed keys::
+* Environment speed keys::
+* Customization::
+* Adding your own commands::
+* Working in Org and @LaTeX{} together::
+* Troubleshooting::
+* Index::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+Overview
+
+* How it works::
+
+Installation
+
+* Install from MELPA::
+* Install from source::
+* Requirements::
+
+Speed positions
+
+* Heading lines::
+* Environment lines::
+* Commented headings and environments::
+* Section boundaries::
+* Speed keys at every line start::
+
+Heading speed keys
+
+* Outline navigation::
+* Outline visibility::
+* Outline structure editing::
+* Heading editing::
+* Compile, view, and miscellaneous: Compile view and miscellaneous. 
+* Org keys without a @LaTeX{} analog::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@cindex overview
+@cindex speed commands, idea
+
+@LaTeX{} Speed Commands brings the single-key @emph{speed commands} of Org
+mode to @LaTeX{} buffers.  In Org, when point is at the very beginning
+of a headline, a plain key such as @code{n}, @code{p}, @code{c} or @code{k} runs an
+outline command instead of inserting the character.  This package
+does the same at the beginning of @LaTeX{} sectioning lines such as
+@code{\section@{Results@}}, and at the beginning of @code{\begin@{...@}} and
+@code{\end@{...@}} lines.
+
+The keys follow @code{org-speed-commands} as closely as @LaTeX{} allows.  A
+person who writes in Org and in @LaTeX{} on the same day can keep the
+same muscle memory in both kinds of documents.  The package works
+with the built-in @code{latex-mode} and with the @code{LaTeX-mode} of AUC@TeX{}.
+It needs no other package.
+
+Neither @code{latex-mode} nor AUC@TeX{} has anything like this.  AUC@TeX{}
+offers @code{C-c} prefixed commands and outline folding, but no
+single-key commands at the beginning of a line.
+
+@menu
+* How it works::
+@end menu
+
+@node How it works
+@section How it works
+
+@cindex conditional key bindings
+@cindex electric keys, AUCTeX
+
+The minor mode @code{latex-speed-commands-mode} gives every printable key
+a @emph{conditional} binding.  When a key is pressed, the binding asks
+whether a speed command exists for that key at point.  When one
+exists, it runs.  When none exists, the binding steps aside and the
+key behaves exactly as it would without the package.
+
+This design matters for AUC@TeX{} users.  Keys such as @code{$}, @code{"} and @code{^}
+have electric bindings in AUC@TeX{}.  The package never shadows a key
+that it does not use at the current position, so those bindings
+keep working everywhere, including at the beginning of a heading.
+
+An analogy may help.  The speed keys are like the keys on a piano
+that has a second keyboard folded underneath.  The second keyboard
+swings into place only at the start of a heading or an environment
+line, and only for the keys that it actually has.
+
+@node Installation
+@chapter Installation
+
+@cindex installation
+
+@menu
+* Install from MELPA::
+* Install from source::
+* Requirements::
+@end menu
+
+@node Install from MELPA
+@section Install from MELPA
+
+@cindex MELPA
+
+After the package is on MELPA, add MELPA to @code{package-archives} and
+then use @code{use-package}.
+
+@lisp
+(use-package latex-speed-commands
+  :ensure t
+  :hook ((LaTeX-mode . latex-speed-commands-mode)
+         (latex-mode . latex-speed-commands-mode)))
+@end lisp
+
+@node Install from source
+@section Install from source
+
+@cindex installation from source
+
+Clone the repository and put it on the load path.
+
+@example
+git clone https://github.com/MooersLab/latex-speed-commands-el.git
+@end example
+
+@lisp
+(add-to-list 'load-path "/path/to/latex-speed-commands-el")
+(require 'latex-speed-commands)
+(add-hook 'LaTeX-mode-hook #'latex-speed-commands-mode) ; AUCTeX
+(add-hook 'latex-mode-hook #'latex-speed-commands-mode) ; built-in
+@end lisp
+
+To read this manual inside Emacs from a source checkout, run @code{make
+info} and then type @code{C-u C-h i} followed by the path of
+@samp{docs/latex-speed-commands.info}.
+
+@node Requirements
+@section Requirements
+
+@cindex requirements
+
+The package needs Emacs 28.1 or newer, because it uses
+@code{outline-cycle} and @code{outline-cycle-buffer}.  AUC@TeX{} is optional.
+
+@node Getting started
+@chapter Getting started
+
+@cindex getting started
+
+Open a @LaTeX{} file and turn on the minor mode with @code{M-x
+latex-speed-commands-mode}, unless a hook already did.  The mode
+line shows @samp{Speed}.  Then try these steps.
+
+@enumerate
+@item
+Move point to the very beginning of a @code{\section@{...@}} line.
+@item
+Press @code{?}.  A help buffer lists every speed command.
+@item
+Press @code{n} and @code{p} to move between headings.
+@item
+Press @code{c} to fold and unfold the section.
+@item
+Press @code{F} to jump to the next environment.  On that @code{\begin} line,
+press @code{e} to jump to the matching @code{\end} and @code{e} again to jump back.
+@item
+Move point one character to the right and press @code{n}.  The letter
+is inserted, because point is no longer at a speed position.
+@end enumerate
+
+To insert one of the speed keys literally at a speed position, type
+@code{C-q} first, for example @code{C-q n}.  This is the same trick that works
+in Org.
+
+@node Speed positions
+@chapter Speed positions
+
+@cindex speed position
+@cindex heading line
+@cindex environment line
+
+A @emph{speed position} is a place where the speed keys are active.  There
+are two kinds by default, and a third kind is optional.
+
+@menu
+* Heading lines::
+* Environment lines::
+* Commented headings and environments::
+* Section boundaries::
+* Speed keys at every line start::
+@end menu
+
+@node Heading lines
+@section Heading lines
+
+@cindex heading line, definition
+@cindex sectioning commands
+@vindex latex-speed-commands-section-levels
+
+Point must be at the beginning of a line that starts with one of the
+commands in @code{latex-speed-commands-section-levels}.  The line may be
+indented.  The command may be starred, and it may have an optional
+argument, as in @code{\section*[Short]@{Long title@}}.  The keys in
+@code{latex-speed-commands} are active there.
+
+The default levels are listed in the next table.
+
+@float Table,orgf35be99
+@multitable {aaaaaaaaaaaaaaaa} {aaaaa}
+@headitem Command
+@tab Level
+@item @code{\part}
+@tab 0
+@item @code{\chapter}
+@tab 1
+@item @code{\section}
+@tab 2
+@item @code{\subsection}
+@tab 3
+@item @code{\subsubsection}
+@tab 4
+@item @code{\paragraph}
+@tab 5
+@item @code{\subparagraph}
+@tab 6
+@end multitable
+@caption{Default sectioning commands and their outline levels.}
+@end float
+
+Add your own entries for other classes.  For Beamer slides you might
+add @code{("frametitle" . 7)}.
+
+@node Environment lines
+@section Environment lines
+
+@cindex environment line, definition
+
+Point must be at the beginning of a line that starts with
+@code{\begin@{NAME@}} or @code{\end@{NAME@}}.  The keys in
+@code{latex-speed-commands-environment} are active there.  These play the
+role of the Babel speed keys on an Org @code{#+begin_src} line.
+
+When a line is both an environment line and covered by the optional
+predicate described below, the environment keys win.
+
+@node Commented headings and environments
+@section Commented headings and environments
+
+@cindex commented headings
+@cindex COMMENT, Org analog
+
+A heading or environment line that starts with a percent sign, as in
+@code{% \section@{Old draft@}}, is still a speed position.  This is the
+@LaTeX{} analog of an Org @code{COMMENT} headline, and it lets the @code{#} key
+uncomment what it commented.  Navigation counts commented headings
+too.
+
+@node Section boundaries
+@section Section boundaries
+
+@cindex section boundaries
+@vindex latex-speed-commands-section-boundary-regexp
+
+A section extends to the next heading of the same or a higher rank.
+It also stops at @code{\end@{document@}}, @code{\appendix}, @code{\frontmatter},
+@code{\mainmatter}, @code{\backmatter}, @code{\bibliography@{...@}} and
+@code{\printbibliography}.  The option
+@code{latex-speed-commands-section-boundary-regexp} holds this list.
+Without it, killing the last chapter would also kill
+@code{\end@{document@}}.
+
+@node Speed keys at every line start
+@section Speed keys at every line start
+
+@cindex leftmost column
+@cindex beginning of line
+@vindex latex-speed-commands-use
+
+Like @code{org-use-speed-commands}, the option @code{latex-speed-commands-use}
+may hold a function.  When the function returns non-nil, the heading
+speed keys are active at point, in addition to the usual positions.
+
+@lisp
+;; Speed keys at the start of every line.
+(setq latex-speed-commands-use #'bolp)
+@end lisp
+
+With this setting, a paragraph can no longer begin with a speed key
+letter unless you type @code{C-q} first.  Many people prefer a narrower
+predicate, such as one that also requires the line to be empty.
+
+@lisp
+(setq latex-speed-commands-use
+      (lambda () (and (bolp) (eolp))))
+@end lisp
+
+All heading commands act on the section around point, so they also
+work from inside a section body.
+
+@node Heading speed keys
+@chapter Heading speed keys
+
+@cindex heading speed keys
+@cindex key table, headings
+@vindex latex-speed-commands
+
+These are the default keys of @code{latex-speed-commands}.  The last
+column names the Org command that uses the same key.  The word
+@emph{same} means that the meaning matches.
+
+@menu
+* Outline navigation::
+* Outline visibility::
+* Outline structure editing::
+* Heading editing::
+* Compile, view, and miscellaneous: Compile view and miscellaneous. 
+* Org keys without a @LaTeX{} analog::
+@end menu
+
+@node Outline navigation
+@section Outline navigation
+
+@cindex navigation keys
+@findex latex-speed-commands-next-heading
+@findex latex-speed-commands-previous-heading
+@findex latex-speed-commands-forward-same-level
+@findex latex-speed-commands-backward-same-level
+@findex latex-speed-commands-up-heading
+
+@float Table,orgca1b2e5
+@multitable {aaa} {aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa} {aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa}
+@headitem Key
+@tab Action
+@tab Org command
+@item @code{n}
+@tab Next heading
+@tab @code{org-next-visible-heading}
+@item @code{p}
+@tab Previous heading
+@tab @code{org-previous-visible-heading}
+@item @code{f}
+@tab Next heading at the same level
+@tab @code{org-forward-heading-same-level}
+@item @code{b}
+@tab Previous heading at the same level
+@tab @code{org-backward-heading-same-level}
+@item @code{F}
+@tab Next @code{\begin} line
+@tab @code{org-next-block}
+@item @code{B}
+@tab Previous @code{\begin} line
+@tab @code{org-previous-block}
+@item @code{u}
+@tab Parent heading
+@tab @code{outline-up-heading}
+@item @code{j}
+@tab Jump with @code{imenu}
+@tab @code{org-goto}
+@end multitable
+@caption{Outline navigation keys at heading lines.}
+@end float
+
+The keys @code{n}, @code{p}, @code{f}, @code{b} and @code{u} run through
+@code{latex-speed-commands-move-safe}, the analog of
+@code{org-speed-move-safe}.  When the move would not end at a heading,
+point goes back where it was and an error message appears.
+
+@node Outline visibility
+@section Outline visibility
+
+@cindex visibility keys
+@cindex folding
+@findex latex-speed-commands-cycle
+@findex latex-speed-commands-cycle-buffer
+
+@float Table,org4bccf00
+@multitable {aaaaa} {aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa} {aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa}
+@headitem Key
+@tab Action
+@tab Org command
+@item @code{c}
+@tab Cycle the visibility of the section
+@tab @code{org-cycle}
+@item @code{C}
+@tab Cycle the visibility of the buffer
+@tab @code{org-shifttab}
+@item @code{SPC}
+@tab Show the outline path in the echo area
+@tab @code{org-display-outline-path}
+@item @code{s}
+@tab Narrow to the section, or widen
+@tab @code{org-toggle-narrow-to-subtree}
+@item @code{k}
+@tab Kill the section
+@tab @code{org-cut-subtree}
+@item @code{w}
+@tab Copy the section
+@tab none (Org uses @code{w} to refile)
+@item @code{=}
+@tab Count the words in the section
+@tab none (Org shows columns)
+@end multitable
+@caption{Visibility keys at heading lines.}
+@end float
+
+The @code{c} and @code{C} keys turn on @code{outline-minor-mode} when needed.  The
+major mode decides what counts as a heading for folding.
+
+@node Outline structure editing
+@section Outline structure editing
+
+@cindex structure editing keys
+@cindex promote
+@cindex demote
+@findex latex-speed-commands-move-section-up
+@findex latex-speed-commands-move-section-down
+@findex latex-speed-commands-demote-section
+@findex latex-speed-commands-promote-section
+
+@float Table,org1aba3cb
+@multitable {aaa} {aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa} {aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa}
+@headitem Key
+@tab Action
+@tab Org command
+@item @code{U}
+@tab Swap the section with the previous sibling
+@tab @code{org-metaup}
+@item @code{D}
+@tab Swap the section with the next sibling
+@tab @code{org-metadown}
+@item @code{r}
+@tab Demote the heading line
+@tab @code{org-metaright}
+@item @code{l}
+@tab Promote the heading line
+@tab @code{org-metaleft}
+@item @code{R}
+@tab Demote the whole section
+@tab @code{org-shiftmetaright}
+@item @code{L}
+@tab Promote the whole section
+@tab @code{org-shiftmetaleft}
+@item @code{i}
+@tab New heading after the section
+@tab @code{org-insert-heading-respect-content}
+@item @code{@@}
+@tab Mark the section
+@tab @code{org-mark-subtree}
+@item @code{#}
+@tab Comment or uncomment the section
+@tab @code{org-toggle-comment}
+@end multitable
+@caption{Structure editing keys at heading lines.}
+@end float
+
+Demoting turns @code{\section} into @code{\subsection}, and promoting does the
+reverse.  The order comes from @code{latex-speed-commands-section-levels}.
+A whole-section change is all or nothing.  When one heading cannot
+move, none of them changes.
+
+@node Heading editing
+@section Heading editing
+
+@cindex labels
+@cindex starred headings
+@findex latex-speed-commands-set-section-label
+@findex latex-speed-commands-toggle-heading-star
+@findex latex-speed-commands-insert-environment
+@vindex latex-speed-commands-label-prefixes
+
+@float Table,org2e1c824
+@multitable {aaa} {aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa} {aaaaaaaaaaaaaaaaaaaaaa}
+@headitem Key
+@tab Action
+@tab Org command
+@item @code{*}
+@tab Toggle @code{\section} and @code{\section*}
+@tab none
+@item @code{:}
+@tab Add or edit the @code{\label}
+@tab @code{org-set-tags-command}
+@item @code{e}
+@tab Insert an environment after the heading
+@tab none (Org sets effort)
+@end multitable
+@caption{Heading editing keys.}
+@end float
+
+The label key proposes a label built from a prefix and the title.
+For @code{\section@{Results and \emph@{Discussion@}@}} it proposes
+@code{sec:results-and-discussion}.  The prefixes live in
+@code{latex-speed-commands-label-prefixes}.
+
+@node Compile view and miscellaneous
+@section Compile, view, and miscellaneous
+
+@cindex compile
+@cindex view
+@findex latex-speed-commands-compile
+@findex latex-speed-commands-view
+@findex latex-speed-commands-help
+
+@float Table,orgb56040b
+@multitable {aaa} {aaaaaaaaaaaaaaaaaaaaaaaaaaa} {aaaaaaaaaaaaaaaaaaaaaaaaaaa}
+@headitem Key
+@tab Action
+@tab Org command
+@item @code{x}
+@tab Compile the document
+@tab none
+@item @code{v}
+@tab View the output
+@tab none (Org opens the agenda)
+@item @code{/}
+@tab Run @code{occur}
+@tab @code{org-sparse-tree}
+@item @code{?}
+@tab Show the speed command help
+@tab @code{org-speed-command-help}
+@end multitable
+@caption{Compile, view, and miscellaneous keys.}
+@end float
+
+In AUC@TeX{} buffers, @code{x} runs @code{TeX-command-master} and @code{v} runs
+@code{TeX-view}.  In @code{latex-mode} buffers they run @code{tex-file} and
+@code{tex-view}.
+
+@node Org keys without a @LaTeX{} analog
+@section Org keys without a @LaTeX{} analog
+
+@cindex missing Org keys
+
+Org also uses @code{g}, @code{^}, @code{a}, @code{I}, @code{O}, @code{t}, @code{,}, @code{0} to @code{3}, @code{E},
+@code{W}, @code{o}, @code{<} and @code{>} for refiling, sorting, archiving, clocking,
+TODO states, priorities, effort, and agenda restrictions.  These have
+no counterpart in @LaTeX{}, so the keys insert themselves.  You can
+assign your own commands to them.  See @ref{Adding your own commands}.
+
+@node Environment speed keys
+@chapter Environment speed keys
+
+@cindex environment speed keys
+@cindex key table, environments
+@vindex latex-speed-commands-environment
+@findex latex-speed-commands-goto-matching
+@findex latex-speed-commands-change-environment
+@findex latex-speed-commands-toggle-environment-star
+@findex latex-speed-commands-set-environment-label
+
+These are the default keys of @code{latex-speed-commands-environment}.
+They are active at the beginning of @code{\begin} and @code{\end} lines.
+
+@float Table,org701ccb1
+@multitable {aaa} {aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa} {aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa}
+@headitem Key
+@tab Action
+@tab Org or Babel analog
+@item @code{n}
+@tab Next @code{\begin} line
+@tab @code{org-babel-next-src-block}
+@item @code{p}
+@tab Previous @code{\begin} line
+@tab @code{org-babel-previous-src-block}
+@item @code{e}
+@tab Jump between @code{\begin} and @code{\end}
+@tab none
+@item @code{u}
+@tab Enclosing environment
+@tab @code{org-babel-goto-src-block-head}
+@item @code{h}
+@tab Back to the section heading
+@tab none
+@item @code{c}
+@tab Change the environment name
+@tab none
+@item @code{*}
+@tab Toggle the star, as in @code{equation*}
+@tab none
+@item @code{:}
+@tab Add or edit the @code{\label}
+@tab @code{org-set-tags-command}
+@item @code{s}
+@tab Narrow to the environment, or widen
+@tab @code{org-toggle-narrow-to-subtree}
+@item @code{k}
+@tab Kill the environment
+@tab @code{org-cut-subtree}
+@item @code{w}
+@tab Copy the environment
+@tab none
+@item @code{@@}
+@tab Mark the environment
+@tab @code{org-mark-subtree}
+@item @code{#}
+@tab Comment or uncomment the environment
+@tab @code{org-toggle-comment}
+@item @code{x}
+@tab Compile the document
+@tab none
+@item @code{v}
+@tab View the output
+@tab none
+@item @code{/}
+@tab Run @code{occur}
+@tab @code{org-sparse-tree}
+@item @code{?}
+@tab Show the speed command help
+@tab @code{org-speed-command-help}
+@end multitable
+@caption{Speed keys at environment lines.}
+@end float
+
+Matching skips nested environments and environments inside comments.
+The environment label key puts a new label after the @code{\caption} when
+there is one, because @LaTeX{} numbers the label from the caption.
+
+@node Customization
+@chapter Customization
+
+@cindex customization
+@cindex options
+
+Type @code{M-x customize-group RET latex-speed-commands RET} to see all
+options.  The next table summarizes them.
+
+@float Table,org876ff67
+@multitable {aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa} {aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa}
+@headitem Option
+@tab Purpose
+@item @code{latex-speed-commands-use}
+@tab Turn speed keys off, on, or on where a function says
+@item @code{latex-speed-commands}
+@tab Keys and commands at heading lines
+@item @code{latex-speed-commands-environment}
+@tab Keys and commands at environment lines
+@item @code{latex-speed-commands-activate-functions}
+@tab Hook that picks the command for a key
+@item @code{latex-speed-commands-section-levels}
+@tab Sectioning commands and their levels
+@item @code{latex-speed-commands-section-boundary-regexp}
+@tab Lines that end every section before them
+@item @code{latex-speed-commands-label-prefixes}
+@tab Label prefixes such as @code{sec:} and @code{fig:}
+@item @code{latex-speed-commands-lighter}
+@tab Mode line text
+@end multitable
+@caption{User options of latex-speed-commands.}
+@end float
+
+@node Adding your own commands
+@chapter Adding your own commands
+
+@cindex adding commands
+@cindex user speed commands
+
+The two key alists use the same format as @code{org-speed-commands}.  An
+entry is a cons of a one-letter string and a command, a function, or
+a form to evaluate.  An entry that is a list of one string is a group
+heading for the help buffer.  The first matching entry wins, so push
+your entries onto the front.
+
+@lisp
+(with-eval-after-load 'latex-speed-commands
+  ;; t: insert a \todo@{@} note after the heading line.
+  (push '("t" . (progn (end-of-line) (insert "\n\\todo@{@}") (backward-char)))
+        latex-speed-commands)
+  ;; g: refile-like jump with consult, when it is installed.
+  (push '("g" . consult-outline) latex-speed-commands)
+  ;; o: open the PDF of a figure from its \begin@{figure@} line.
+  (push '("o" . my-open-figure-pdf) latex-speed-commands-environment))
+@end lisp
+
+For a new kind of speed position, add a function to
+@code{latex-speed-commands-activate-functions}.  The function receives the
+key as a string and returns a command or nil.  This is the analog of
+@code{org-speed-command-hook}.
+
+@lisp
+(defun my-item-speed-activate (key)
+  "Speed keys at the start of \\item lines."
+  (when (and (bolp) (looking-at "[ \t]*\\\\item\\b"))
+    (cdr (assoc key '(("n" . my-next-item) ("k" . kill-whole-line))))))
+(add-hook 'latex-speed-commands-activate-functions #'my-item-speed-activate)
+@end lisp
+
+@node Working in Org and @LaTeX{} together
+@chapter Working in Org and @LaTeX{} together
+
+@cindex Org and LaTeX together
+@cindex muscle memory
+
+The guiding rule is that a key does the same job in both modes when
+the job exists in both.  The keys @code{n}, @code{p}, @code{f}, @code{b}, @code{u}, @code{F}, @code{B},
+@code{c}, @code{C}, @code{SPC}, @code{s}, @code{k}, @code{U}, @code{D}, @code{r}, @code{l}, @code{R}, @code{L}, @code{i}, @code{@@},
+@code{#}, @code{:}, @code{j}, @code{/} and @code{?} all carry over.
+
+The main difference is the definition of a speed position.  Org
+needs point before the stars of a headline.  This package needs point
+before the backslash of the sectioning command, or before the
+indentation in front of it.
+
+A second difference concerns @code{*}.  In Org, @code{*} is not a speed key, so
+it adds a star and demotes the headline.  In @LaTeX{} it toggles the
+starred form of the heading, which removes the number.
+
+@node Troubleshooting
+@chapter Troubleshooting
+
+@cindex troubleshooting
+@cindex FAQ
+
+@table @asis
+@item A key inserts itself at a heading.
+Check that point is at the very
+beginning of the line and that the mode line shows @samp{Speed}.  Check
+that @code{latex-speed-commands-use} is non-nil.  Then press @code{?} to see
+whether the key has a speed command.
+@item The @code{c} key does not fold.
+Folding comes from
+@code{outline-minor-mode} and the @code{outline-regexp} of the major mode.
+An indented heading is a speed position, but the major mode may not
+treat it as an outline heading.
+@item Evil users.
+In normal state, Evil reads keys before this
+package does.  The speed keys work in insert and Emacs states.
+@item The package conflicts with another minor mode.
+Minor mode maps
+that come earlier in @code{minor-mode-map-alist} take priority.  Turn
+the other mode off in @LaTeX{} buffers, or bind its key elsewhere.
+@end table
+
+@node Index
+@chapter Index
+
+@printindex cp
+
+@bye
